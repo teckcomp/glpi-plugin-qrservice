@@ -1,3 +1,11 @@
+# Dependências PHP
 vendor/
-.env
+
+# Logos enviadas pelos usuários (dados de instância)
+img/logos/
+img/empresa/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
 *.log
