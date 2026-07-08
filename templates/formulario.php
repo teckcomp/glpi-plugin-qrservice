@@ -22,7 +22,7 @@ $subtitulo     = htmlspecialchars($qrcodeData['subtitulo_formulario'] ?: 'Suport
     body {
         margin: 0;
         font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-        background: linear-gradient(180deg, var(--qr-cor-secundaria) 0%, #0a0f1f 260px, #0a0f1f 100%);
+        background: linear-gradient(180deg, var(--qr-cor-primaria) 0%, var(--qr-cor-secundaria) 100%); background-attachment: fixed;
         min-height: 100vh;
     }
     .qr-header { background: linear-gradient(90deg, var(--qr-cor-primaria), var(--qr-cor-secundaria)); padding: 24px 20px; text-align: center; }
