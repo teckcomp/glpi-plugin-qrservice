@@ -1,5 +1,20 @@
 {
+    "name": "teckcomp/glpi-plugin-qrservice",
+    "description": "QR Service - Anonymous Ticket Opening Plugin for GLPI",
+    "type": "glpi-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Claudio Morett",
+            "email": "claudio@teckcomp.com.br"
+        }
+    ],
     "require": {
         "endroid/qr-code": "^6.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "GlpiPlugin\\Qrservice\\": "src/"
+        }
     }
 }
