@@ -63,7 +63,7 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
 .qrs-section-title { font-size:16px; font-weight:700; color:#333; margin:0 0 14px; }
 
 /* Cards de navegação */
-.qrs-cards { display:grid; grid-template-columns:repeat(5,minmax(160px,1fr)); gap:16px; margin-bottom:24px; }
+.qrs-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:24px; }
 .qrs-card { background:#fff; border-radius:12px; padding:24px 20px; box-shadow:0 2px 8px rgba(0,0,0,.08); text-align:center; display:flex; flex-direction:column; align-items:center; }
 .qrs-card p { flex:1; margin:0 0 16px; }
 .qrs-card p { flex:1; }
@@ -88,7 +88,7 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
 .qrs-resumo-sub { font-size:11px; color:#aaa; }
 
 /* Inferior */
-.qrs-bottom { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+.qrs-bottom { display:grid; grid-template-columns:1fr; gap:20px; margin-bottom:24px; }
 @media(max-width:700px){ .qrs-bottom { grid-template-columns:1fr; } }
 .qrs-box { background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
 .qrs-atalho { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f1f3f5; text-decoration:none; color:#1a3a6b; font-size:14px; font-weight:600; }
@@ -200,24 +200,6 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
                     <p>Crie e gerencie QR Codes personalizados</p>
                     <a href="<?php echo $urlQrCodes; ?>" class="qrs-card-btn btn-green">Gerenciar →</a>
                 </div>
-                <div class="qrs-card">
-                    <div class="qrs-card-icon">🎨</div>
-                    <h3>Personalização</h3>
-                    <p>Personalize cores, logo, ícones, campos e fundo</p>
-                    <a href="<?php echo $urlQrCodes; ?>" class="qrs-card-btn btn-purple">Configurar →</a>
-                </div>
-                <div class="qrs-card">
-                    <div class="qrs-card-icon">📋</div>
-                    <h3>Campos do Formulário</h3>
-                    <p>Defina quais campos serão exibidos no formulário</p>
-                    <a href="<?php echo $urlQrCodes; ?>" class="qrs-card-btn btn-orange">Configurar →</a>
-                </div>
-                <div class="qrs-card">
-                    <div class="qrs-card-icon">📊</div>
-                    <h3>Relatórios</h3>
-                    <p>Acompanhe estatísticas e chamados abertos</p>
-                    <span class="qrs-card-btn btn-gray">Em breve</span>
-                </div>
             </div>
 
             <!-- RESUMO GERAL -->
@@ -268,21 +250,6 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
             <!-- ATALHOS + ÚLTIMOS CHAMADOS -->
             <div class="qrs-bottom">
                 <div class="qrs-box">
-                    <p class="qrs-section-title">Atalhos Rápidos</p>
-                    <a href="<?php echo $urlNovoCliente; ?>" class="qrs-atalho">
-                        <span class="qrs-atalho-left">➕ Novo Cliente / Setor</span><span>›</span>
-                    </a>
-                    <a href="<?php echo $urlNovoQr; ?>" class="qrs-atalho">
-                        <span class="qrs-atalho-left">📱 Gerar Novo QR Code</span><span>›</span>
-                    </a>
-                    <a href="<?php echo $urlQrCodes; ?>" class="qrs-atalho">
-                        <span class="qrs-atalho-left">🎨 Personalizar Layout</span><span>›</span>
-                    </a>
-                    <a href="<?php echo $urlQrCodes; ?>" class="qrs-atalho">
-                        <span class="qrs-atalho-left">📋 Configurar Formulário</span><span>›</span>
-                    </a>
-                </div>
-                <div class="qrs-box">
                     <p class="qrs-section-title">Últimos Chamados via QR Code</p>
                     <?php if (iterator_count($ultimosChamados) === 0): ?>
                         <div class="qrs-chamados-vazio">
@@ -298,7 +265,7 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <a href="<?php echo $urlClientes; ?>" class="qrs-ver-todos">Ver todos os chamados</a>
+                    <a href="/front/ticket.php?criteria[0][field]=9&criteria[0][searchtype]=equals&criteria[0][value]=<?php $rtQr = new RequestType(); echo $rtQr->getFromDBByCrit(['name' => 'QR Code']) ? $rtQr->getID() : 0; ?>&reset=reset" class="qrs-ver-todos">Ver todos os chamados</a>
                 </div>
             </div>
 

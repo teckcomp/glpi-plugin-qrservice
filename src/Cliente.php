@@ -15,11 +15,29 @@ use Session;
  */
 class Cliente extends CommonDBTM
 {
-    public static $rightname = 'entity';
+    public static $rightname = 'plugin_qrservice';
 
     public static function getTypeName($nb = 0)
     {
         return _n('Cliente', 'Clientes', $nb, 'qrservice');
+    }
+
+    public static function getMenuContent()
+    {
+        $menu = [
+            'title' => self::getTypeName(2),
+            'page'  => '/plugins/qrservice/front/cliente.php',
+            'icon'  => self::getIcon(),
+        ];
+
+        if (self::canCreate()) {
+            $menu['links']['add'] = '/plugins/qrservice/front/cliente.form.php';
+        }
+        if (self::canView()) {
+            $menu['links']['search'] = '/plugins/qrservice/front/cliente.php';
+        }
+
+        return $menu;
     }
 
     public static function getIcon()

@@ -66,7 +66,12 @@ function plugin_init_qrservice()
 
     $PLUGIN_HOOKS['menu_toadd']['qrservice'] = [
         'admin' => \GlpiPlugin\Qrservice\QrCode::class,
+        'admin2' => \GlpiPlugin\Qrservice\Cliente::class,
     ];
+    // Registra Cliente no menu de administração também
+    Plugin::registerClass(\GlpiPlugin\Qrservice\Cliente::class, [
+        'addtabon' => [],
+    ]);
 }
 
 function plugin_qrservice_check_prerequisites()

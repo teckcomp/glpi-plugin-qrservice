@@ -28,7 +28,7 @@ if (isset($_POST['add'])) {
         'GlpiPlugin\\Qrservice\\Cliente'
     );
 
-    $id = (int) ($_GET['id'] ?? 0);
+    $id = (int) ($_GET['id'] ?? -1);
     if ($id > 0) {
         $cliente->getFromDB($id);
     } else {

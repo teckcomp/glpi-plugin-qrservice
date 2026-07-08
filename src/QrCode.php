@@ -8,7 +8,7 @@ use Session;
 
 class QrCode extends CommonDBTM
 {
-    public static $rightname = 'entity';
+    public static $rightname = 'plugin_qrservice';
 
     public static function getTypeName($nb = 0)
     {

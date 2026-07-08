@@ -1,9 +1,6 @@
 <?php
-
 use GlpiPlugin\Qrservice\Cliente;
-
 include('../../../inc/includes.php');
-
 Session::checkLoginUser();
 
 Html::header(
@@ -13,10 +10,14 @@ Html::header(
     'GlpiPlugin\\Qrservice\\Cliente'
 );
 
-if (isset($_GET['id']) && $_GET['id'] > 0) {
-    Html::redirect('cliente.form.php?id=' . (int) $_GET['id']);
+if (Cliente::canCreate()) {
+    echo "<div class='d-flex justify-content-between mb-3'>";
+    echo "<a href='/plugins/qrservice/front/cliente.form.php' 
+             class='btn btn-primary'>
+             <i class='ti ti-plus'></i> " . __('Adicionar') . "
+          </a>";
+    echo "</div>";
 }
 
 Search::show(Cliente::class);
-
 Html::footer();

@@ -9,3 +9,4 @@ img/empresa/
 .DS_Store
 Thumbs.db
 *.log
+*.bak.*

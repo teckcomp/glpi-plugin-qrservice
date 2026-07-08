@@ -10,7 +10,7 @@ use CommonDBTM;
  */
 class Campo extends CommonDBTM
 {
-    public static $rightname = 'entity';
+    public static $rightname = 'plugin_qrservice';
 
     // Tipos de campo suportados pelo formulário público
     public const TIPO_TEXTO    = 'text';

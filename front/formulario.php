@@ -263,6 +263,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
             }
         }
 
+        // Origem da requisição: QR Code
+        $rtQr = new RequestType();
+        if ($rtQr->getFromDBByCrit(['name' => 'QR Code'])) {
+            $inputTicket['requesttypes_id'] = $rtQr->getID();
+        }
+
         $ticket = new Ticket();
         $ticketID = $ticket->add($inputTicket);
 
