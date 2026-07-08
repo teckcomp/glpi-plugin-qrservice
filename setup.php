@@ -5,6 +5,10 @@
  * Abertura Inteligente de Chamados via QR Code
  * -------------------------------------------------------------------------
  */
+// Carrega o autoloader do plugin
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
 
 if (!defined('PLUGIN_QRSERVICE_VERSION')) {
     define('PLUGIN_QRSERVICE_VERSION', '0.1.0-alpha');
