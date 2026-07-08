@@ -8,6 +8,7 @@ use Endroid\QrCode\Writer\PngWriter;
 
 include('../../../inc/includes.php');
 Session::checkLoginUser();
+Session::checkRight('plugin_qrservice', READ);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $id = (int) ($_GET['id'] ?? 0);

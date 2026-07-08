@@ -26,6 +26,7 @@ function plugin_qrservice_install()
             `entities_id` int {$default_key_sign} NOT NULL DEFAULT 0,
             `name` varchar(255) NOT NULL DEFAULT '',
             `is_active` tinyint NOT NULL DEFAULT 1,
+            `locations_id_raiz` int {$default_key_sign} NOT NULL DEFAULT 0,
             `date_creation` timestamp NULL DEFAULT NULL,
             `date_mod` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`),
@@ -34,6 +35,10 @@ function plugin_qrservice_install()
           COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
         $DB->doQuery($query) or die($DB->error());
     }
+    if (!$DB->fieldExists($table, 'locations_id_raiz')) {
+        $DB->doQuery("ALTER TABLE `$table` ADD COLUMN `locations_id_raiz` int {$default_key_sign} NOT NULL DEFAULT 0 AFTER `is_active`") or die($DB->error());
+    }
+
 
     // ---------------------------------------------------------------
     // Tabela: glpi_plugin_qrservice_qrcodes

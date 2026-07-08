@@ -132,6 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
         $auth->user->getFromDB((int) $qrcodeData['users_id_default_requester']);
         Session::init($auth);
 
+        try {
+
         $entidadeDestino = $qrcodeData['entities_id_ticket'] ?: $qrcodeData['entities_id'];
         Session::changeActiveEntities($entidadeDestino, true);
 
@@ -301,8 +303,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
             ]);
         }
 
-        Session::destroy();
-        session_write_close();
+        } finally {
+            Session::destroy();
+            session_write_close();
+        }
 
         include(__DIR__ . '/../templates/sucesso.php');
         exit;

@@ -6,6 +6,7 @@ global $DB;
 
 // --- SERVE a logo atual ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    Session::checkRight('plugin_qrservice', READ);
     $res  = $DB->doQuery("SELECT logo_empresa FROM glpi_plugin_qrservice_config WHERE id=1");
     $row  = $DB->fetchAssoc($res);
     $file = $row['logo_empresa'] ?? '';
@@ -27,6 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 // --- SALVA nova logo ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    Session::checkRight('plugin_qrservice', UPDATE);
+    Session::checkCSRF($_POST);
     if (empty($_FILES['logo_empresa']['tmp_name']) ||
         ($_FILES['logo_empresa']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
         http_response_code(400);

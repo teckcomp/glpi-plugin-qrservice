@@ -11,7 +11,8 @@ $cliente = new Cliente();
 if (isset($_POST['add'])) {
     $cliente->check(-1, CREATE, $_POST);
     $newID = $cliente->add($_POST);
-    Html::redirect(Cliente::getFormURL() . '?id=' . $newID);
+    Session::addMessageAfterRedirect(__('Cliente criado com sucesso', 'qrservice'), true, INFO);
+    Html::redirect(Plugin::getWebDir('qrservice') . '/front/cliente.php');
 } elseif (isset($_POST['update'])) {
     $cliente->check($_POST['id'], UPDATE);
     $cliente->update($_POST);
