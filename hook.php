@@ -128,6 +128,28 @@ function plugin_qrservice_install()
         $DB->doQuery("INSERT INTO `$table` (id) VALUES (1)");
     }
 
+    // ---------------------------------------------------------------
+    // Direitos do plugin (glpi_profilerights)
+    // ---------------------------------------------------------------
+    ProfileRight::addProfileRights(['plugin_qrservice']);
+    $DB->updateOrInsert('glpi_profilerights', ['rights' => 255], [
+        'profiles_id' => 4,
+        'name'        => 'plugin_qrservice',
+    ]);
+
+    // ---------------------------------------------------------------
+    // Origem da requisição "QR Code" (usada pelo formulário público)
+    // ---------------------------------------------------------------
+    $rtQr = new RequestType();
+    if (!$rtQr->getFromDBByCrit(['name' => 'QR Code'])) {
+        $rtQr->add([
+            'name'            => 'QR Code',
+            'is_active'       => 1,
+            'is_ticketheader' => 1,
+            'is_itilfollowup' => 1,
+        ]);
+    }
+
     $migration->executeMigration();
 
     return true;
@@ -153,6 +175,9 @@ function plugin_qrservice_uninstall()
     foreach ($tables as $table) {
         $DB->doQuery("DROP TABLE IF EXISTS `$table`");
     }
+
+    // Remove os direitos do plugin
+    $DB->delete('glpi_profilerights', ['name' => 'plugin_qrservice']);
 
     return true;
 }
