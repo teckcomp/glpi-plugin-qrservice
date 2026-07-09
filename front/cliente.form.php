@@ -11,15 +11,18 @@ $cliente = new Cliente();
 if (isset($_POST['add'])) {
     $cliente->check(-1, CREATE, $_POST);
     $newID = $cliente->add($_POST);
+    Cliente::syncMarcas((int) $newID, $_POST['marcas'] ?? []);
     Session::addMessageAfterRedirect(__('Cliente criado com sucesso', 'qrservice'), true, INFO);
     Html::redirect(Plugin::getWebDir('qrservice') . '/front/cliente.php');
 } elseif (isset($_POST['update'])) {
     $cliente->check($_POST['id'], UPDATE);
     $cliente->update($_POST);
+    Cliente::syncMarcas((int) $_POST['id'], $_POST['marcas'] ?? []);
     Html::back();
 } elseif (isset($_POST['purge'])) {
     $cliente->check($_POST['id'], PURGE);
     $cliente->delete($_POST, 1);
+    Cliente::syncMarcas((int) $_POST['id'], []);
     Html::redirect(Plugin::getWebDir('qrservice') . '/front/cliente.php');
 } else {
     Html::header(

@@ -131,36 +131,25 @@ $subtitulo     = htmlspecialchars($qrcodeData['subtitulo_formulario'] ?: 'Suport
                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
         </div>
 
-        <?php if ($modoLocalizacao === 1): ?>
-        <div class="qr-field">
-            <label>Marca / Unidade</label>
-            <select name="marca_unidade" id="marca_unidade">
+        <?php if ($modoLocalizacao !== 3): ?>
+        <div class="qr-field" id="campo_marca">
+            <label>Marca</label>
+            <select name="marca" id="marca">
                 <option value="">-----</option>
-                <?php foreach ($associados as $id => $nome): ?>
-                    <option value="<?php echo $id; ?>" <?php echo (($_POST['marca_unidade'] ?? '') == $id) ? 'selected' : ''; ?>>
+                <?php foreach ($marcas as $id => $nome): ?>
+                    <option value="<?php echo $id; ?>" <?php echo (($_POST['marca'] ?? '') == $id) ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($nome); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
         </div>
-
-        <div class="qr-field">
-            <label>Localização</label>
-            <select name="localizacao" id="localizacao" disabled>
-                <option value="">Selecione a Marca/Unidade primeiro</option>
-            </select>
+        <div class="qr-field" id="campo_unidade" style="display:none">
+            <label>Unidade</label>
+            <select name="unidade" id="unidade"></select>
         </div>
-        <?php elseif ($modoLocalizacao === 2): ?>
-        <div class="qr-field">
+        <div class="qr-field" id="campo_localizacao" style="display:none">
             <label>Localização</label>
-            <select name="localizacao" id="localizacao">
-                <option value="">-----</option>
-                <?php foreach ($associados as $id => $nome): ?>
-                    <option value="<?php echo $id; ?>" <?php echo (($_POST['localizacao'] ?? '') == $id) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($nome); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <select name="localizacao" id="localizacao"></select>
         </div>
         <?php endif; ?>
 
@@ -211,79 +200,76 @@ $subtitulo     = htmlspecialchars($qrcodeData['subtitulo_formulario'] ?: 'Suport
 (function () {
     var token = <?php echo json_encode($token); ?>;
     var ajaxUrl = '../ajax/localizacoes.php';
-
-    var selectMarca = document.getElementById('marca_unidade');
-    var selectLocal = document.getElementById('localizacao');
+    var selMarca = document.getElementById('marca');
+    var selUnidade = document.getElementById('unidade');
+    var selLocal = document.getElementById('localizacao');
     var inputEndereco = document.getElementById('endereco');
-    var localizacaoPreSelecionada = <?php echo json_encode($_POST['localizacao'] ?? ''); ?>;
+    var preUnidade = <?php echo json_encode($_POST['unidade'] ?? ''); ?>;
+    var preLocal = <?php echo json_encode($_POST['localizacao'] ?? ''); ?>;
 
-    // Campos progressivos: Localização aparece após a Marca/Unidade;
-    // Endereço aparece após a Localização (modo "sem localização": sempre visível)
-    var campoLocal = selectLocal ? selectLocal.closest('.qr-field') : null;
-    var campoEndereco = inputEndereco ? inputEndereco.closest('.qr-field') : null;
+    function campoDe(el) { return el ? el.closest('.qr-field') : null; }
+    function mostrar(el, on) { var c = campoDe(el); if (c) { c.style.display = on ? '' : 'none'; } }
 
-    function atualizarVisibilidade() {
-        if (campoLocal && selectMarca) {
-            campoLocal.style.display = selectMarca.value ? '' : 'none';
-        }
-        if (campoEndereco && selectLocal) {
-            campoEndereco.style.display = selectLocal.value ? '' : 'none';
-        }
-    }
-
-    if (selectLocal) {
-        selectLocal.addEventListener('change', atualizarVisibilidade);
-    }
-
-    function carregarLojas(marcaID, preselecionarID) {
-        selectLocal.innerHTML = '<option value="">Carregando...</option>';
-        selectLocal.disabled = true;
-        if (!preselecionarID) {
-            inputEndereco.value = '';
-        }
-
-        if (!marcaID) {
-            selectLocal.innerHTML = '<option value="">Selecione a Marca/Unidade primeiro</option>';
-            return;
-        }
-
-        fetch(ajaxUrl + '?token=' + encodeURIComponent(token) + '&action=lojas&parent=' + encodeURIComponent(marcaID))
+    function carregarFilhos(parentID, select, pre, aoTerminar) {
+        select.innerHTML = '<option value="">Carregando...</option>';
+        fetch(ajaxUrl + '?token=' + encodeURIComponent(token) + '&action=lojas&parent=' + encodeURIComponent(parentID))
             .then(function (r) { return r.json(); })
             .then(function (lista) {
-                selectLocal.innerHTML = '<option value="">-----</option>';
+                select.innerHTML = '<option value="">-----</option>';
                 lista.forEach(function (item) {
                     var opt = document.createElement('option');
                     opt.value = item.id;
                     opt.textContent = item.name;
-                    if (preselecionarID && String(item.id) === String(preselecionarID)) {
-                        opt.selected = true;
-                    }
-                    selectLocal.appendChild(opt);
+                    if (pre && String(item.id) === String(pre)) { opt.selected = true; }
+                    select.appendChild(opt);
                 });
-                selectLocal.disabled = false;
-                atualizarVisibilidade();
+                aoTerminar(lista.length);
             })
-            .catch(function () {
-                selectLocal.innerHTML = '<option value="">Erro ao carregar</option>';
-            });
+            .catch(function () { select.innerHTML = '<option value="">Erro ao carregar</option>'; aoTerminar(0); });
     }
 
-    if (selectMarca) {
-        selectMarca.addEventListener('change', function () {
-            carregarLojas(this.value, null);
-            atualizarVisibilidade();
+    function aoMudarUnidade(pre) {
+        mostrar(selLocal, false);
+        mostrar(inputEndereco, false);
+        if (!selUnidade.value) { return; }
+        carregarFilhos(selUnidade.value, selLocal, pre, function (qtd) {
+            if (qtd > 0) {
+                mostrar(selLocal, true);
+                if (selLocal.value) { mostrar(inputEndereco, true); }
+            } else {
+                // unidade sem filhos: ela é a localização final
+                mostrar(inputEndereco, true);
+            }
         });
-        // Recarregou com erro e já havia Marca/Unidade: recarrega e re-seleciona
-        if (selectMarca.value) {
-            carregarLojas(selectMarca.value, localizacaoPreSelecionada);
+    }
+
+    function aoMudarMarca(pre1, pre2) {
+        mostrar(selUnidade, false);
+        mostrar(selLocal, false);
+        mostrar(inputEndereco, false);
+        if (!selMarca.value) { return; }
+        carregarFilhos(selMarca.value, selUnidade, pre1, function (qtd) {
+            if (qtd > 0) {
+                mostrar(selUnidade, true);
+                if (selUnidade.value) { aoMudarUnidade(pre2); }
+            } else {
+                // marca sem filhos: ela é a localização final
+                mostrar(inputEndereco, true);
+            }
+        });
+    }
+
+    if (selMarca) {
+        selMarca.addEventListener('change', function () { aoMudarMarca(null, null); });
+        selUnidade.addEventListener('change', function () { aoMudarUnidade(null); });
+        selLocal.addEventListener('change', function () { mostrar(inputEndereco, !!this.value); });
+        if (!selMarca.value) {
+            mostrar(inputEndereco, false);
+        } else {
+            aoMudarMarca(preUnidade, preLocal);
         }
     }
-    atualizarVisibilidade();
-
-
-    // Endereço agora é sempre preenchido manualmente pelo visitante.
-
-    // ---- Dropzone de anexo ----
+        // ---- Dropzone de anexo ----
     var dropzone = document.getElementById('qr-dropzone');
     var inputAnexo = document.getElementById('qr-anexo-input');
     var labelArquivo = document.getElementById('qr-dropzone-arquivo');

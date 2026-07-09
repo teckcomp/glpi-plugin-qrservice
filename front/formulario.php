@@ -24,12 +24,12 @@ if ($qrcodeData === null) {
 $cliente = new Cliente();
 $cliente->getFromDB((int) $qrcodeData['plugin_qrservice_clientes_id']);
 
-$associados = $cliente->getAssociados();
+$marcas     = $cliente->getMarcas();
 $campos     = Campo::getCamposDoQrCode((int) $qrcodeData['id']);
 
-$modoLocalizacao = (int) ($qrcodeData['modo_localizacao'] ?? 0);
-if ($modoLocalizacao === 0) {
-    $modoLocalizacao = $cliente->getModoAutomatico();
+$modoLocalizacao = ((int) ($qrcodeData['modo_localizacao'] ?? 0) === 3) ? 3 : 0;
+if (empty($marcas)) {
+    $modoLocalizacao = 3; // cliente sem marcas cadastradas -> sem localização
 }
 $erros      = [];
 $ticketID   = null;
@@ -45,6 +45,15 @@ function qrservice_gerar_captcha(): array
     return ['a' => $a, 'b' => $b];
 }
 
+function qrservice_tem_filhos(int $locID): bool
+{
+    global $DB;
+    foreach ($DB->request(['FROM' => 'glpi_locations', 'WHERE' => ['locations_id' => $locID], 'LIMIT' => 1]) as $r) {
+        return true;
+    }
+    return false;
+}
+
 // -------------------------------------------------------------------
 // Processamento do envio (POST)
 // -------------------------------------------------------------------
@@ -53,7 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
     $nome        = trim($_POST['nome'] ?? '');
     $telefone    = trim($_POST['telefone'] ?? '');
     $email       = trim($_POST['email'] ?? '');
-    $marcaID     = (int) ($_POST['marca_unidade'] ?? 0);
+    $marcaID     = (int) ($_POST['marca'] ?? 0);
+    $unidadeID   = (int) ($_POST['unidade'] ?? 0);
     $locationID  = (int) ($_POST['localizacao'] ?? 0);
     $endereco    = trim($_POST['endereco'] ?? '');
     $descricao   = trim($_POST['descricao'] ?? '');
@@ -67,11 +77,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
     if ($email === '') {
         $erros[] = __('Informe o e-mail para contato.', 'qrservice');
     }
-    if ($modoLocalizacao === 1 && $marcaID <= 0) {
-        $erros[] = __('Selecione a Marca/Unidade.', 'qrservice');
-    }
-    if ($modoLocalizacao !== 3 && $locationID <= 0) {
-        $erros[] = __('Selecione a Localização.', 'qrservice');
+    if ($modoLocalizacao !== 3) {
+        if ($marcaID <= 0 || !array_key_exists($marcaID, $marcas)) {
+            $erros[] = __('Selecione a Marca.', 'qrservice');
+        } elseif (qrservice_tem_filhos($marcaID)) {
+            $uniObj = new Location();
+            if ($unidadeID <= 0 || !$uniObj->getFromDB($unidadeID) || (int) $uniObj->fields['locations_id'] !== $marcaID) {
+                $erros[] = __('Selecione a Unidade.', 'qrservice');
+            } elseif (qrservice_tem_filhos($unidadeID)) {
+                $locObj = new Location();
+                if ($locationID <= 0 || !$locObj->getFromDB($locationID) || (int) $locObj->fields['locations_id'] !== $unidadeID) {
+                    $erros[] = __('Selecione a Localização.', 'qrservice');
+                }
+            }
+        }
     }
     if ($endereco === '') {
         $erros[] = __('Informe o endereço.', 'qrservice');
@@ -80,8 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
         $erros[] = __('Descreva o problema.', 'qrservice');
     }
 
-    // Segurança: confirma que a localização enviada realmente pertence a este cliente
-    if ($locationID > 0 && !$cliente->localizacaoPertenceAoCliente($locationID)) {
+    // Localização final = nível mais específico selecionado
+    $localFinal = $locationID > 0 ? $locationID : ($unidadeID > 0 ? $unidadeID : $marcaID);
+    if ($modoLocalizacao !== 3 && $localFinal > 0 && !$cliente->localizacaoPertenceAoCliente($localFinal)) {
         $erros[] = __('Localização inválida para este formulário.', 'qrservice');
     }
 
@@ -157,14 +177,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
         // "Biotec Filho 01"), então esse vínculo já basta — não é
         // necessário bater telefone/e-mail nesse caso.
         // -------------------------------------------------------------
-        $locBaseID = ($modoLocalizacao === 1) ? $marcaID : (($modoLocalizacao === 2) ? $locationID : 0);
-        $marcaCompletename = null;
-        $marcaLoc = new Location();
-        if ($locBaseID > 0 && $marcaLoc->getFromDB($locBaseID)) {
-            $marcaCompletename = $marcaLoc->fields['completename'];
-        }
-
-        if ($marcaCompletename !== null) {
+        // Busca em camadas: Localização -> Unidade -> Marca
+        foreach ([$locationID, $unidadeID, $marcaID] as $nivelID) {
+            if ($usuarioIdentificadoID !== null || $nivelID <= 0) {
+                continue;
+            }
+            $nivelLoc = new Location();
+            if (!$nivelLoc->getFromDB($nivelID)) {
+                continue;
+            }
             $iteratorPorLocal = $DB->request([
                 'SELECT'    => ['glpi_users.id'],
                 'FROM'      => 'glpi_users',
@@ -180,13 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
                     'glpi_users.is_active'  => 1,
                     'glpi_users.is_deleted' => 0,
                     'OR' => [
-                        'glpi_locations.completename' => $marcaCompletename,
-                        ['glpi_locations.completename' => ['LIKE', $marcaCompletename . ' > %']],
+                        'glpi_locations.completename' => $nivelLoc->fields['completename'],
+                        ['glpi_locations.completename' => ['LIKE', $nivelLoc->fields['completename'] . ' > %']],
                     ],
                 ],
                 'LIMIT' => 1,
             ]);
-
             foreach ($iteratorPorLocal as $linha) {
                 $usuarioIdentificadoID = (int) $linha['id'];
             }
@@ -240,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
             'name'                  => 'Chamado via QR - ' . $qrcodeData['name'] . ' - ' . $nome,
             'content'               => $conteudo,
             'entities_id'           => $entidadeDestino,
-            'locations_id'          => $locationID,
+            'locations_id'          => ($modoLocalizacao === 3) ? 0 : $localFinal,
             '_users_id_requester'   => $requerenteID,
             'urgency'               => 3,
             'impact'                => 3,

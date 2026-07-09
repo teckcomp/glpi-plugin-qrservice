@@ -343,9 +343,7 @@ class QrCode extends CommonDBTM
         echo "<td>" . __('Modo de localização', 'qrservice') . "</td>";
         echo "<td>";
         \Dropdown::showFromArray('modo_localizacao', [
-            0 => __('Automático (detecta pela árvore do cliente)', 'qrservice'),
-            1 => __('Cascata (Marca/Unidade -> Localização)', 'qrservice'),
-            2 => __('Dropdown simples de localização', 'qrservice'),
+            0 => __('Automático (cascata pela árvore das marcas)', 'qrservice'),
             3 => __('Sem localização', 'qrservice'),
         ], [
             'value' => (int) ($this->fields['modo_localizacao'] ?? 0),

@@ -57,6 +57,54 @@ class Cliente extends CommonDBTM
      * Nível 2: filhos diretos da raiz (ex: "Marca/Unidade").
      * Lista pequena (~125), pode ser carregada de uma vez.
      */
+    /**
+     * Marcas (localizações de topo) vinculadas a este cliente.
+     * @return array [locations_id => nome]
+     */
+    public function getMarcas(): array
+    {
+        global $DB;
+        $out = [];
+        $iterator = $DB->request([
+            'SELECT'     => ['glpi_locations.id', 'glpi_locations.name'],
+            'FROM'       => 'glpi_plugin_qrservice_clientes_marcas',
+            'INNER JOIN' => [
+                'glpi_locations' => [
+                    'ON' => [
+                        'glpi_locations'                        => 'id',
+                        'glpi_plugin_qrservice_clientes_marcas' => 'locations_id',
+                    ],
+                ],
+            ],
+            'WHERE' => ['plugin_qrservice_clientes_id' => (int) $this->getID()],
+            'ORDER' => 'glpi_locations.name ASC',
+        ]);
+        foreach ($iterator as $row) {
+            $out[(int) $row['id']] = $row['name'];
+        }
+        return $out;
+    }
+
+    /**
+     * Regrava os vínculos Cliente <-> Marcas.
+     */
+    public static function syncMarcas(int $clienteID, array $locIDs): void
+    {
+        global $DB;
+        $DB->delete('glpi_plugin_qrservice_clientes_marcas', [
+            'plugin_qrservice_clientes_id' => $clienteID,
+        ]);
+        foreach ($locIDs as $locID) {
+            $locID = (int) $locID;
+            if ($locID > 0) {
+                $DB->insert('glpi_plugin_qrservice_clientes_marcas', [
+                    'plugin_qrservice_clientes_id' => $clienteID,
+                    'locations_id'                 => $locID,
+                ]);
+            }
+        }
+    }
+
     public function getAssociados(): array
     {
         global $DB;
@@ -135,37 +183,33 @@ class Cliente extends CommonDBTM
         }
         return '';
     }
-
     /**
-     * Segurança: confirma que um determinado ID de Localização realmente
-     * pertence à árvore raiz deste cliente (evita acessar dados de outro
-     * cliente adulterando o parâmetro da requisição AJAX).
+     * A localização pertence à árvore de ALGUMA das marcas deste cliente?
      */
     public function localizacaoPertenceAoCliente(int $locationID): bool
     {
-        global $DB;
-
-        $raizID = (int) ($this->fields['locations_id_raiz'] ?? 0);
-        if ($raizID <= 0 || $locationID <= 0) {
+        if ($locationID <= 0) {
             return false;
         }
-
-        $raiz = new \Location();
-        if (!$raiz->getFromDB($raizID)) {
+        $marcas = array_keys($this->getMarcas());
+        if (empty($marcas)) {
             return false;
         }
-
-        if ($locationID === $raizID) {
+        if (in_array($locationID, $marcas, true)) {
             return true;
         }
-
         $alvo = new \Location();
         if (!$alvo->getFromDB($locationID)) {
             return false;
         }
-
-        $completenameRaiz = $raiz->fields['completename'];
-        return str_starts_with($alvo->fields['completename'], $completenameRaiz . ' > ');
+        foreach ($marcas as $marcaID) {
+            $marca = new \Location();
+            if ($marca->getFromDB((int) $marcaID)
+                && str_starts_with($alvo->fields['completename'], $marca->fields['completename'] . ' > ')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function showForm($ID, array $options = [])
@@ -189,12 +233,23 @@ class Cliente extends CommonDBTM
         echo "<td>";
         \Dropdown::showYesNo('is_active', $this->fields['is_active']);
         echo "</td>";
-        echo "<td>" . __('Localização raiz (Grupo — isola a árvore deste cliente)', 'qrservice') . "</td>";
+        echo "<td>" . __('Marcas (localizações de topo deste cliente)', 'qrservice')
+            . "<br><small style='color:#e67e00;font-weight:700;'>"
+            . __('Segure Ctrl (ou Cmd) para selecionar várias', 'qrservice') . "</small></td>";
         echo "<td>";
-        \Location::dropdown([
-            'name'  => 'locations_id_raiz',
-            'value' => $this->fields['locations_id_raiz'] ?? 0,
+        global $DB;
+        $marcasAtuais = array_keys($this->getMarcas());
+        echo "<select name='marcas[]' multiple size='8' style='min-width:260px;'>";
+        $iterTopo = $DB->request([
+            'FROM'  => 'glpi_locations',
+            'WHERE' => ['locations_id' => 0],
+            'ORDER' => 'name ASC',
         ]);
+        foreach ($iterTopo as $loc) {
+            $sel = in_array((int) $loc['id'], $marcasAtuais, true) ? ' selected' : '';
+            echo "<option value='" . (int) $loc['id'] . "'$sel>" . htmlspecialchars($loc['name']) . "</option>";
+        }
+        echo "</select>";
         echo "</td>";
         echo "</tr>";
 

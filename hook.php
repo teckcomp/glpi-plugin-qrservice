@@ -39,6 +39,26 @@ function plugin_qrservice_install()
         $DB->doQuery("ALTER TABLE `$table` ADD COLUMN `locations_id_raiz` int {$default_key_sign} NOT NULL DEFAULT 0 AFTER `is_active`") or die($DB->error());
     }
 
+    // ---------------------------------------------------------------
+    // Tabela: glpi_plugin_qrservice_clientes_marcas (N-N Cliente <-> Marcas)
+    // ---------------------------------------------------------------
+    $table = 'glpi_plugin_qrservice_clientes_marcas';
+    if (!$DB->tableExists($table)) {
+        $query = "CREATE TABLE `$table` (
+            `id` int {$default_key_sign} NOT NULL AUTO_INCREMENT,
+            `plugin_qrservice_clientes_id` int {$default_key_sign} NOT NULL DEFAULT 0,
+            `locations_id` int {$default_key_sign} NOT NULL DEFAULT 0,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `cliente_location` (`plugin_qrservice_clientes_id`, `locations_id`),
+            KEY `locations_id` (`locations_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset}
+          COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
+        $DB->doQuery($query) or die($DB->error());
+        // Migra o vínculo antigo (locations_id_raiz) para a nova tabela
+        $DB->doQuery("INSERT IGNORE INTO `$table` (plugin_qrservice_clientes_id, locations_id)
+            SELECT id, locations_id_raiz FROM glpi_plugin_qrservice_clientes WHERE locations_id_raiz > 0");
+    }
+
 
     // ---------------------------------------------------------------
     // Tabela: glpi_plugin_qrservice_qrcodes
@@ -175,6 +195,7 @@ function plugin_qrservice_uninstall()
     global $DB;
 
     $tables = [
+        'glpi_plugin_qrservice_clientes_marcas',
         'glpi_plugin_qrservice_chamados',
         'glpi_plugin_qrservice_campos',
         'glpi_plugin_qrservice_qrcodes',
