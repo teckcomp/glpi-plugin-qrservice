@@ -84,6 +84,28 @@ class Cliente extends CommonDBTM
      * Nível 3: filhos diretos de uma Marca/Unidade (ex: "Localização").
      * Pode ser uma lista grande — usado sob demanda via AJAX.
      */
+    /**
+     * Detecta o modo de localização quando configurado como Automático:
+     * 1 = cascata (raiz tem netos), 2 = dropdown simples (só filhos), 3 = sem localização
+     */
+    public function getModoAutomatico(): int
+    {
+        global $DB;
+        $associados = $this->getAssociados();
+        if (empty($associados)) {
+            return 3;
+        }
+        $iterator = $DB->request([
+            'FROM'  => 'glpi_locations',
+            'WHERE' => ['locations_id' => array_keys($associados)],
+            'LIMIT' => 1,
+        ]);
+        foreach ($iterator as $row) {
+            return 1;
+        }
+        return 2;
+    }
+
     public static function getLojasDoAssociado(int $associadoID): array
     {
         global $DB;

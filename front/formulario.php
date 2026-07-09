@@ -26,6 +26,11 @@ $cliente->getFromDB((int) $qrcodeData['plugin_qrservice_clientes_id']);
 
 $associados = $cliente->getAssociados();
 $campos     = Campo::getCamposDoQrCode((int) $qrcodeData['id']);
+
+$modoLocalizacao = (int) ($qrcodeData['modo_localizacao'] ?? 0);
+if ($modoLocalizacao === 0) {
+    $modoLocalizacao = $cliente->getModoAutomatico();
+}
 $erros      = [];
 $ticketID   = null;
 
@@ -62,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
     if ($email === '') {
         $erros[] = __('Informe o e-mail para contato.', 'qrservice');
     }
-    if ($marcaID <= 0) {
+    if ($modoLocalizacao === 1 && $marcaID <= 0) {
         $erros[] = __('Selecione a Marca/Unidade.', 'qrservice');
     }
-    if ($locationID <= 0) {
+    if ($modoLocalizacao !== 3 && $locationID <= 0) {
         $erros[] = __('Selecione a Localização.', 'qrservice');
     }
     if ($endereco === '') {
@@ -152,9 +157,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qrservice_submit'])) 
         // "Biotec Filho 01"), então esse vínculo já basta — não é
         // necessário bater telefone/e-mail nesse caso.
         // -------------------------------------------------------------
+        $locBaseID = ($modoLocalizacao === 1) ? $marcaID : (($modoLocalizacao === 2) ? $locationID : 0);
         $marcaCompletename = null;
         $marcaLoc = new Location();
-        if ($marcaLoc->getFromDB($marcaID)) {
+        if ($locBaseID > 0 && $marcaLoc->getFromDB($locBaseID)) {
             $marcaCompletename = $marcaLoc->fields['completename'];
         }
 

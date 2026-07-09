@@ -61,6 +61,7 @@ function plugin_qrservice_install()
             `users_id_default_requester` int {$default_key_sign} NOT NULL DEFAULT 0,
             `entities_id_ticket` int {$default_key_sign} NOT NULL DEFAULT 0,
             `is_active` tinyint NOT NULL DEFAULT 1,
+            `modo_localizacao` tinyint NOT NULL DEFAULT 0,
             `date_creation` timestamp NULL DEFAULT NULL,
             `date_mod` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`),
@@ -72,6 +73,10 @@ function plugin_qrservice_install()
           COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;";
         $DB->doQuery($query) or die($DB->error());
     }
+    if (!$DB->fieldExists($table, 'modo_localizacao')) {
+        $DB->doQuery("ALTER TABLE `$table` ADD COLUMN `modo_localizacao` tinyint NOT NULL DEFAULT 0") or die($DB->error());
+    }
+
 
     // ---------------------------------------------------------------
     // Tabela: glpi_plugin_qrservice_campos

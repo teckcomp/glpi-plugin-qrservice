@@ -131,6 +131,7 @@ $subtitulo     = htmlspecialchars($qrcodeData['subtitulo_formulario'] ?: 'Suport
                    value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
         </div>
 
+        <?php if ($modoLocalizacao === 1): ?>
         <div class="qr-field">
             <label>Marca / Unidade</label>
             <select name="marca_unidade" id="marca_unidade">
@@ -149,6 +150,19 @@ $subtitulo     = htmlspecialchars($qrcodeData['subtitulo_formulario'] ?: 'Suport
                 <option value="">Selecione a Marca/Unidade primeiro</option>
             </select>
         </div>
+        <?php elseif ($modoLocalizacao === 2): ?>
+        <div class="qr-field">
+            <label>Localização</label>
+            <select name="localizacao" id="localizacao">
+                <option value="">-----</option>
+                <?php foreach ($associados as $id => $nome): ?>
+                    <option value="<?php echo $id; ?>" <?php echo (($_POST['localizacao'] ?? '') == $id) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($nome); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
 
         <div class="qr-field">
             <label>Endereço</label>
@@ -203,6 +217,24 @@ $subtitulo     = htmlspecialchars($qrcodeData['subtitulo_formulario'] ?: 'Suport
     var inputEndereco = document.getElementById('endereco');
     var localizacaoPreSelecionada = <?php echo json_encode($_POST['localizacao'] ?? ''); ?>;
 
+    // Campos progressivos: Localização aparece após a Marca/Unidade;
+    // Endereço aparece após a Localização (modo "sem localização": sempre visível)
+    var campoLocal = selectLocal ? selectLocal.closest('.qr-field') : null;
+    var campoEndereco = inputEndereco ? inputEndereco.closest('.qr-field') : null;
+
+    function atualizarVisibilidade() {
+        if (campoLocal && selectMarca) {
+            campoLocal.style.display = selectMarca.value ? '' : 'none';
+        }
+        if (campoEndereco && selectLocal) {
+            campoEndereco.style.display = selectLocal.value ? '' : 'none';
+        }
+    }
+
+    if (selectLocal) {
+        selectLocal.addEventListener('change', atualizarVisibilidade);
+    }
+
     function carregarLojas(marcaID, preselecionarID) {
         selectLocal.innerHTML = '<option value="">Carregando...</option>';
         selectLocal.disabled = true;
@@ -229,22 +261,25 @@ $subtitulo     = htmlspecialchars($qrcodeData['subtitulo_formulario'] ?: 'Suport
                     selectLocal.appendChild(opt);
                 });
                 selectLocal.disabled = false;
+                atualizarVisibilidade();
             })
             .catch(function () {
                 selectLocal.innerHTML = '<option value="">Erro ao carregar</option>';
             });
     }
 
-    selectMarca.addEventListener('change', function () {
-        carregarLojas(this.value, null);
-    });
-
-    // Se a página recarregou com erro (ex: captcha errado) e já havia uma
-    // Marca/Unidade selecionada, recarrega a Localização automaticamente
-    // e tenta re-selecionar a que já tinha sido escolhida.
-    if (selectMarca.value) {
-        carregarLojas(selectMarca.value, localizacaoPreSelecionada);
+    if (selectMarca) {
+        selectMarca.addEventListener('change', function () {
+            carregarLojas(this.value, null);
+            atualizarVisibilidade();
+        });
+        // Recarregou com erro e já havia Marca/Unidade: recarrega e re-seleciona
+        if (selectMarca.value) {
+            carregarLojas(selectMarca.value, localizacaoPreSelecionada);
+        }
     }
+    atualizarVisibilidade();
+
 
     // Endereço agora é sempre preenchido manualmente pelo visitante.
 

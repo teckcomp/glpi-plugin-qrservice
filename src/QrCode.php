@@ -339,13 +339,29 @@ class QrCode extends CommonDBTM
         echo "</td>";
         echo "</tr>";
         // --- FIM LOGO ---
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>" . __('Modo de localização', 'qrservice') . "</td>";
+        echo "<td>";
+        \Dropdown::showFromArray('modo_localizacao', [
+            0 => __('Automático (detecta pela árvore do cliente)', 'qrservice'),
+            1 => __('Cascata (Marca/Unidade -> Localização)', 'qrservice'),
+            2 => __('Dropdown simples de localização', 'qrservice'),
+            3 => __('Sem localização', 'qrservice'),
+        ], [
+            'value' => (int) ($this->fields['modo_localizacao'] ?? 0),
+        ]);
+        echo "</td>";
+        echo "<td colspan='2'></td>";
+        echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
         echo "<td>" . __('Usuário técnico padrão (solicitante do chamado)', 'qrservice') . "</td>";
         echo "<td>";
         \User::dropdown([
-            'name'  => 'users_id_default_requester',
-            'value' => $this->fields['users_id_default_requester'],
+            'name'   => 'users_id_default_requester',
+            'value'  => $this->fields['users_id_default_requester'],
+            'right'  => 'all',
+            'entity' => -1,
         ]);
         echo "</td>";
         echo "<td>" . __('Entidade de destino do chamado', 'qrservice') . "</td>";
