@@ -214,47 +214,103 @@ class Cliente extends CommonDBTM
 
     public function showForm($ID, array $options = [])
     {
+        global $DB;
         $this->initForm($ID, $options);
         $this->showFormHeader($options);
 
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Nome do cliente', 'qrservice') . "</td>";
-        echo "<td>";
-        echo "<input type='text' name='name' value='" . htmlspecialchars($this->fields['name'] ?? '') . "'>";
-        echo "</td>";
-        echo "<td>" . \Entity::getTypeName(1) . "</td>";
-        echo "<td>";
-        \Entity::dropdown(['value' => $this->fields['entities_id']]);
-        echo "</td>";
-        echo "</tr>";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Ativo', 'qrservice') . "</td>";
-        echo "<td>";
-        \Dropdown::showYesNo('is_active', $this->fields['is_active']);
-        echo "</td>";
-        echo "<td>" . __('Marcas (localizações de topo deste cliente)', 'qrservice')
-            . "<br><small style='color:#e67e00;font-weight:700;'>"
-            . __('Segure Ctrl (ou Cmd) para selecionar várias', 'qrservice') . "</small></td>";
-        echo "<td>";
-        global $DB;
         $marcasAtuais = array_keys($this->getMarcas());
-        echo "<select name='marcas[]' multiple size='8' style='min-width:260px;'>";
+
+        echo "<tr class='tab_bg_1'><td colspan='4' style='padding:0;'>";
+        echo "<style>
+        .qrsc-wrap { display:grid; grid-template-columns:1fr 1fr; gap:18px 28px; padding:20px 14px; }
+        @media (max-width:900px) { .qrsc-wrap { grid-template-columns:1fr; } }
+        .qrsc-field label.qrsc-label { display:block; font-weight:600; font-size:13px; color:#374151; margin-bottom:6px; }
+        .qrsc-field input[type=text] { width:100%; max-width:420px; padding:8px 12px; border:1px solid #d1d5db; border-radius:8px; }
+        .qrsc-marcas { grid-column:1 / -1; }
+        .qrsc-chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+        .qrsc-chip { display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border:1px solid #d1d5db; border-radius:999px; cursor:pointer; user-select:none; background:#fff; transition:all .15s; font-size:13px; }
+        .qrsc-chip:hover { border-color:#1a3a6b; box-shadow:0 1px 4px rgba(26,58,107,.15); }
+        .qrsc-chip input { accent-color:#1a3a6b; margin:0; }
+        .qrsc-chip.qrsc-on { background:#eef4ff; border-color:#1a3a6b; color:#1a3a6b; font-weight:600; }
+        .qrsc-hint { font-size:12px; color:#6b7280; margin-top:8px; }
+        .qrsc-header { display:flex; align-items:center; gap:14px; padding:18px 14px 0; }
+        .qrsc-logo { width:52px; height:52px; border-radius:12px; background:linear-gradient(135deg,#123a70,#0b1f4d); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(11,31,77,.35); }
+        .qrsc-badge { display:inline-block; margin-top:4px; padding:2px 10px; border-radius:999px; background:#e3f0ff; color:#1a3a6b; font-size:11px; font-weight:700; }
+        .qrsc-title { font-size:18px; font-weight:800; color:#1a3a6b; line-height:1.1; }
+        .qrsc-sub { font-size:12px; color:#6b7280; }
+        </style>";
+
+        echo "<div class='qrsc-header'>";
+        echo "<div class='qrsc-logo'>";
+        echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="34" height="34">'
+           . '<rect x="12" y="12" width="30" height="30" rx="4" fill="none" stroke="#fff" stroke-width="5"/>'
+           . '<rect x="18" y="18" width="18" height="18" rx="2" fill="#4fc3f7"/>'
+           . '<rect x="58" y="12" width="30" height="30" rx="4" fill="none" stroke="#fff" stroke-width="5"/>'
+           . '<rect x="64" y="18" width="18" height="18" rx="2" fill="#4fc3f7"/>'
+           . '<rect x="12" y="58" width="30" height="30" rx="4" fill="none" stroke="#fff" stroke-width="5"/>'
+           . '<rect x="18" y="64" width="18" height="18" rx="2" fill="#4fc3f7"/>'
+           . '<rect x="48" y="48" width="8" height="8" rx="1" fill="#fff"/>'
+           . '<rect x="60" y="48" width="8" height="8" rx="1" fill="#fff"/>'
+           . '<rect x="72" y="48" width="8" height="8" rx="1" fill="#4fc3f7"/>'
+           . '<rect x="48" y="60" width="8" height="8" rx="1" fill="#4fc3f7"/>'
+           . '<rect x="60" y="60" width="8" height="8" rx="1" fill="#fff"/>'
+           . '<rect x="72" y="60" width="8" height="8" rx="1" fill="#fff"/>'
+           . '<rect x="48" y="72" width="8" height="8" rx="1" fill="#fff"/>'
+           . '<rect x="60" y="72" width="8" height="8" rx="1" fill="#4fc3f7"/>'
+           . '<rect x="72" y="72" width="8" height="8" rx="1" fill="#fff"/>'
+           . '</svg>';
+        echo "</div>";
+        echo "<div><div class='qrsc-title'>QR Service</div>";
+        echo "<div class='qrsc-sub'>" . __('Cadastro de Cliente', 'qrservice') . "</div>";
+        echo "<span class='qrsc-badge'>" . __('Versão', 'qrservice') . ": " . PLUGIN_QRSERVICE_VERSION . "</span></div>";
+        echo "</div>";
+
+        echo "<div class='qrsc-wrap'>";
+
+        echo "<div class='qrsc-field'>";
+        echo "<label class='qrsc-label'>" . __('Nome do cliente', 'qrservice') . "</label>";
+        echo "<input type='text' name='name' value='" . htmlspecialchars($this->fields['name'] ?? '') . "'>";
+        echo "</div>";
+
+        echo "<div class='qrsc-field'>";
+        echo "<label class='qrsc-label'>" . \Entity::getTypeName(1) . "</label>";
+        \Entity::dropdown(['value' => $this->fields['entities_id']]);
+        echo "</div>";
+
+        echo "<div class='qrsc-field'>";
+        echo "<label class='qrsc-label'>" . __('Ativo', 'qrservice') . "</label>";
+        \Dropdown::showYesNo('is_active', $this->fields['is_active']);
+        echo "</div>";
+
+        echo "<div class='qrsc-field qrsc-marcas'>";
+        echo "<label class='qrsc-label'>" . __('Marcas (localizações de topo deste cliente)', 'qrservice') . "</label>";
+        echo "<div class='qrsc-chips'>";
         $iterTopo = $DB->request([
             'FROM'  => 'glpi_locations',
             'WHERE' => ['locations_id' => 0],
             'ORDER' => 'name ASC',
         ]);
+        $temTopo = false;
         foreach ($iterTopo as $loc) {
-            $sel = in_array((int) $loc['id'], $marcasAtuais, true) ? ' selected' : '';
-            echo "<option value='" . (int) $loc['id'] . "'$sel>" . htmlspecialchars($loc['name']) . "</option>";
+            $temTopo = true;
+            $on = in_array((int) $loc['id'], $marcasAtuais, true);
+            echo "<label class='qrsc-chip" . ($on ? " qrsc-on" : "") . "'>";
+            echo "<input type='checkbox' name='marcas[]' value='" . (int) $loc['id'] . "'" . ($on ? " checked" : "")
+               . " onchange=\"this.closest('.qrsc-chip').classList.toggle('qrsc-on', this.checked)\">";
+            echo htmlspecialchars($loc['name']);
+            echo "</label>";
         }
-        echo "</select>";
-        echo "</td>";
-        echo "</tr>";
+        if (!$temTopo) {
+            echo "<em>" . __('Nenhuma localização de topo cadastrada ainda.', 'qrservice') . "</em>";
+        }
+        echo "</div>";
+        echo "<div class='qrsc-hint'>" . __('Clique nas marcas para vincular ou desvincular deste cliente.', 'qrservice') . "</div>";
+        echo "</div>";
+
+        echo "</div>";
+        echo "</td></tr>";
 
         $this->showFormButtons($options);
-
         return true;
     }
 }

@@ -18,7 +18,6 @@ $qrcode = new QrCode();
 if (!$qrcode->getFromDB($id)) { http_response_code(404); exit('QR Code não encontrado'); }
 
 $url      = $qrcode->getPublicUrl();
-$logoPath = __DIR__ . '/../img/logo-plugin.png';
 
 // Gera QR puro sem logo
 $builderParams = [
@@ -35,26 +34,6 @@ $builder = new Builder(...$builderParams);
 $result  = $builder->build();
 $qrImg   = imagecreatefromstring($result->getString());
 
-// Sobrepõe logo no canto inferior direito via GD
-if ($qrImg && file_exists($logoPath)) {
-    $logoImg = imagecreatefrompng($logoPath);
-
-    if ($logoImg) {
-        $qrW    = imagesx($qrImg);   // 440
-        $qrH    = imagesy($qrImg);   // 440
-        $logoW  = imagesx($logoImg); // 53
-        $logoH  = imagesy($logoImg); // 53
-        $margin = 30;
-
-        // Posição: canto inferior direito dentro da margem do QR
-        $dstX = $qrW - $logoW - $margin;
-        $dstY = $qrH - $logoH - $margin;
-
-        imagealphablending($qrImg, true);
-        imagecopy($qrImg, $logoImg, $dstX, $dstY, 0, 0, $logoW, $logoH);
-        imagedestroy($logoImg);
-    }
-}
 
 if (isset($_GET['download'])) {
     header('Content-Disposition: attachment; filename="qrcode-' . $id . '.png"');
