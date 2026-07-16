@@ -323,50 +323,6 @@ document.getElementById('qrs-modal-file').addEventListener('change', function() 
     reader.readAsDataURL(file);
 });
 
-function qrsUploadLogo() {
-    var input = document.getElementById('qrs-modal-file');
-    var msg   = document.getElementById('qrs-modal-msg');
-    if (!input.files || !input.files[0]) {
-        msg.style.color = '#c00';
-        msg.textContent = 'Selecione um arquivo primeiro.';
-        return;
-    }
-    var fd = new FormData();
-    fd.append('logo_empresa', input.files[0]);
-    msg.style.color = '#666';
-    msg.textContent = 'Enviando...';
-    var csrfToken = document.querySelector('meta[name="csrf-token"]') ?
-        document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
-    fetch('/plugins/qrservice/ajax/config-logo.php', {
-        method: 'POST',
-        body: fd,
-        credentials: 'same-origin',
-        headers: { 'X-Glpi-Csrf-Token': csrfToken }
-    })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.ok) {
-                msg.style.color = '#16a34a';
-                msg.textContent = 'Logo salva com sucesso!';
-                // Atualiza preview no topo
-                var v = Date.now();
-                var topoPreview = document.getElementById('qrs-empresa-preview');
-                if (topoPreview && topoPreview.tagName === 'IMG') {
-                    topoPreview.src = '/plugins/qrservice/ajax/config-logo.php?v=' + v;
-                }
-                setTimeout(function() {
-                    document.getElementById('qrs-modal-logo').style.display = 'none';
-                }, 1200);
-            } else {
-                msg.style.color = '#c00';
-                msg.textContent = data.erro || 'Erro ao salvar.';
-            }
-        })
-        .catch(function() {
-            msg.style.color = '#c00';
-            msg.textContent = 'Erro de conexão.';
-        });
-}
 </script>
 
 <?php Html::footer(); ?>
