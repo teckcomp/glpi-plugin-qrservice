@@ -63,9 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (file_exists($old)) unlink($old);
     }
 
+    $dir = __DIR__ . '/../img/empresa/';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+
     $ext      = $allowed[$mime];
     $filename = 'empresa_' . time() . '.' . $ext;
-    $dest     = __DIR__ . '/../img/empresa/' . $filename;
+    $dest     = $dir . $filename;
 
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
         http_response_code(500);
