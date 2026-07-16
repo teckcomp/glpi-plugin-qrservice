@@ -143,7 +143,7 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
         <div class="qrs-topo-info">
             <h1>QR Service</h1>
             <p>Abertura Inteligente de Chamados</p>
-            <span class="qrs-badge">Versão: 0.1.0-alpha</span>
+            <span class="qrs-badge">Versão: <?php echo PLUGIN_QRSERVICE_VERSION; ?></span>
         </div>
         <div style="flex:1"></div>
         <div class="qrs-topo-marca">
@@ -273,7 +273,7 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
     </div>
 
     <div class="qrs-footer">
-        QR Service - Plugin para GLPI | Desenvolvimento: Claudio Morett | Versão 0.1.0-alpha
+        QR Service - Plugin para GLPI | Desenvolvimento: Claudio Morett | Versão <?php echo PLUGIN_QRSERVICE_VERSION; ?>
     </div>
 
 </div>

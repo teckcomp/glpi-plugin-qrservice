@@ -11,7 +11,7 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 }
 
 if (!defined('PLUGIN_QRSERVICE_VERSION')) {
-    define('PLUGIN_QRSERVICE_VERSION', '0.1.0-alpha');
+    define('PLUGIN_QRSERVICE_VERSION', '0.1.1-alpha');
 
     define('PLUGIN_QRSERVICE_MIN_GLPI_VERSION', '11.0.0');
     define('PLUGIN_QRSERVICE_MAX_GLPI_VERSION', '11.99.99');

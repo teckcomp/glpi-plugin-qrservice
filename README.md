@@ -33,8 +33,8 @@ O pacote da release já inclui todas as dependências (não precisa de Composer)
 
 ```bash
 cd /caminho/do/glpi/plugins
-wget https://github.com/teckcomp/glpi-plugin-qrservice/releases/download/v0.1.0-alpha/qrservice-v0.1.0-alpha.tar.gz
-tar -xzf qrservice-v0.1.0-alpha.tar.gz && rm qrservice-v0.1.0-alpha.tar.gz
+wget https://github.com/teckcomp/glpi-plugin-qrservice/releases/download/v0.1.1-alpha/qrservice-v0.1.1-alpha.tar.gz
+tar -xzf qrservice-v0.1.1-alpha.tar.gz && rm qrservice-v0.1.1-alpha.tar.gz
 chown -R www-data:www-data qrservice
 ```
 
