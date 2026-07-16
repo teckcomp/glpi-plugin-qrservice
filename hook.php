@@ -161,7 +161,12 @@ function plugin_qrservice_install()
     // ---------------------------------------------------------------
     // Direitos do plugin (glpi_profilerights)
     // ---------------------------------------------------------------
-    ProfileRight::addProfileRights(['plugin_qrservice']);
+    // Guarda de idempotencia: o GLPI reexecuta o install a cada atualizacao
+    // de versao, e addProfileRights() faz INSERT direto -- sem esta checagem
+    // ele estoura em 'Duplicate entry' e aborta o install pela metade.
+    if (countElementsInTable('glpi_profilerights', ['name' => 'plugin_qrservice']) == 0) {
+        ProfileRight::addProfileRights(['plugin_qrservice']);
+    }
     $DB->updateOrInsert('glpi_profilerights', ['rights' => 255], [
         'profiles_id' => 4,
         'name'        => 'plugin_qrservice',
