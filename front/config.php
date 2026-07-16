@@ -300,9 +300,9 @@ $urlNovoQr      = '/plugins/qrservice/front/qrcode.form.php';
                style="display:block;width:100%;margin-bottom:16px;">
 
         <div style="display:flex;gap:10px;justify-content:flex-end;">
-            <button onclick="document.getElementById('qrs-modal-logo').style.display='none'"
+            <button type="button" onclick="document.getElementById('qrs-modal-logo').style.display='none'"
                     style="padding:8px 18px;border:1px solid #ccc;border-radius:8px;background:#fff;cursor:pointer;">Cancelar</button>
-            <button onclick="document.getElementById('qrs-logo-form').submit()"
+            <button type="submit"
                     style="padding:8px 18px;border:none;border-radius:8px;background:#1a3a6b;color:#fff;font-weight:700;cursor:pointer;">Salvar</button>
         </div>
         <div id="qrs-modal-msg" style="margin-top:10px;font-size:13px;text-align:center;"></div>

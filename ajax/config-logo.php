@@ -29,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // --- SALVA nova logo ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     Session::checkRight('plugin_qrservice', UPDATE);
-    Session::checkCSRF($_POST);
+    // CSRF ja e validado pelo core do GLPI (csrf_compliant no setup.php).
+    // Chamar Session::checkCSRF() aqui derruba o request: o token e de uso
+    // unico e ja foi consumido pela verificacao do core.
     if (empty($_FILES['logo_empresa']['tmp_name']) ||
         ($_FILES['logo_empresa']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
         http_response_code(400);
